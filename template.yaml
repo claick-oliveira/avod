@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A.V.O.D
+
+  Template for A.V.O.D
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 5
+
+Parameters:
+  SF_ARN:
+    Type: String
+    Default: arn:aws:states:us-east-1:123456789012:stateMachine:AVOD
+  Region:
+    Type: String
+    Default: us-east-1
+  AWSEnv:
+    Type: String
+    Default: AWS
+
+Resources:
+  StartWorkflowFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: source/start_workflow
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          SF_ARN: !Ref SF_ARN
+          REGION: !Ref Region
+          AWSENV: !Ref AWSEnv
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  StartWorkflowFunction:
+    Description: "Start Workflow Lambda Function ARN"
+    Value: !GetAtt StartWorkflowFunction.Arn
+  StartWorkflowFunctionFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Workflow function"
+    Value: !GetAtt StartWorkflowFunctionRole.Arn
