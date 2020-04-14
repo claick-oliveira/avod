@@ -27,12 +27,12 @@ else:
 
 
 def lambda_handler(event, context):
-    """Sample pure Lambda function
+    """Start StepFunction Lambda function
 
     Parameters
     ----------
     event: dict, required
-        API Gateway Lambda Proxy Input Format
+        S3 PutObject event
 
     context: object, required
         Lambda Context runtime methods and attributes
@@ -40,7 +40,7 @@ def lambda_handler(event, context):
 
     Returns
     ------
-    API Gateway Lambda Proxy Output Format: dict
+    Object/StepFunction information: dict
 
     """
 
