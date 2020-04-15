@@ -35,32 +35,21 @@ def lambda_handler(event, context):
             key = event["metadata"]["key"]
             _id = event["metadata"]["uuid"]
     except KeyError as e:
-        return {
+        raise {
             "message": f"Error - {e}"
         }
 
-    payload = {
-        "metadata": {
-            "status": "IN PROGRESS",
-            "uuid": event["metadata"]["uuid"],
-            "event_time": event["metadata"]["event_time"],
-            "bucket": event["metadata"]["bucket"],
-            "key": event["metadata"]["key"],
-            "file_name": event["metadata"]["file_name"],
-            "execution_arn": event["metadata"]["execution_arn"],
-            "start_date": event["metadata"]["start_date"],
-            "last_update": ""
-        },
-        "Output": {}
-    }
+    payload = event
+    payload["metadata"]["status"] = "IN PROGRESS"
+    payload["Output"] = {}
 
     file_input = f"s3://{bucket}/{key}"
     destination = f"s3://{bucket}/outputs/{_id}/"
 
     try:
         response = mediaconvert.describe_endpoints()
-    except Exception as e:
-        return {
+    except KeyError as e:
+        raise {
             "message": f"Error - {e}"
         }
     else:
@@ -142,8 +131,8 @@ def lambda_handler(event, context):
               }]
             }
         )
-    except Exception as e:
-        return {
+    except KeyError as e:
+        raise {
             "message": f"Error - {e}"
         }
     else:
