@@ -1,0 +1,102 @@
+{
+  "StartAt": "extractAudio",
+  "States": {
+    "extractAudio": {
+      "Type": "Parallel",
+      "End": true,
+      "ResultPath": "$.Outputs",
+      "Branches": [
+        {
+          "StartAt": "Execute Extract Audio",
+          "States": {
+            "Execute Extract Audio": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:StartExtractAudioFunction",
+              "ResultPath": "$.Outputs",
+              "OutputPath": "$.Outputs",
+              "Next": "Extract Audio Wait",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Extract Audio Failed",
+                  "ResultPath": "$.Outputs"
+                }
+              ]
+            },
+            "Get Status Extract Audio": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:GetExtractAudioFunction",
+              "ResultPath": "$.Outputs",
+              "OutputPath": "$.Outputs",
+              "Next": "Did Extract Audio Complete?",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Extract Audio Failed",
+                  "ResultPath": "$.Outputs"
+                }
+              ]
+            },
+            "Did Extract Audio Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "COMPLETE",
+                  "Next": "Extract Audio Succeeded"
+                },
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "IN PROGRESS",
+                  "Next": "Extract Audio Wait"
+                }
+              ],
+              "Default": "Extract Audio Failed"
+            },
+            "Extract Audio Wait": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "Get Status Extract Audio"
+            },
+            "Extract Audio Failed": {
+              "Type": "Fail"
+            },
+            "Extract Audio Succeeded": {
+              "Type": "Succeed"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
