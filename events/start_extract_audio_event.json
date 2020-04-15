@@ -1,0 +1,19 @@
+{
+  "metadata":{
+     "status":"IN PROGRESS",
+     "uuid":"531f729c-2f96-4ba7-8cf7-02284f3e7e35",
+     "event_time":"1970-01-01T00:00:00.000Z",
+     "bucket":"example-bucket",
+     "key":"input/key.mp4",
+     "file_name":"key.mp4",
+     "execution_arn":"arn:aws:states:us-east-1:123456789012:execution:AVOD:key.mp4-531f729c-2f96-4ba7-8cf7-02284f3e7e35",
+     "start_date":"14-Apr-2020 (16:53:43.354000)",
+     "last_update":"14-Apr-2020 (18:04:15.230699)",
+     "mediaconvert_endpoint":"https://abcd12345.mediaconvert.us-east-1.amazonaws.com"
+  },
+  "Output":{
+     "Audio":{
+        "job_id":"1234567891011-abc123"
+     }
+  }
+}
