@@ -3,12 +3,13 @@ import re
 import uuid
 import boto3
 import json
+from datetime import datetime
 
 _id = str(uuid.uuid4())
 regex = "[^/]+$"
 
 sf_arn = os.environ.get(
-    "SF_ARN",
+    "SFARN",
     "arn:aws:states:us-east-1:123456789012:stateMachine:AVOD"
 )
 region = os.environ.get("REGION", "us-east-1")
@@ -57,7 +58,7 @@ def lambda_handler(event, context):
             file_name = re.findall(regex, key)[0]
             event_time = event["Records"][0]["eventTime"]
     except KeyError as e:
-        return {
+        raise {
             "message": f"Error - {e}"
         }
 
@@ -68,7 +69,8 @@ def lambda_handler(event, context):
             "event_time": event_time,
             "bucket": bucket,
             "key": key,
-            "file_name": file_name
+            "file_name": file_name,
+            "start_date": datetime.now().strftime("%d-%b-%Y (%H:%M:%S.%f)")
         }
     }
 
@@ -78,14 +80,10 @@ def lambda_handler(event, context):
             name=f"{file_name}-{_id}",
             input=json.dumps(payload)
         )
+        print(response)
     except KeyError as e:
-        return {
+        raise {
             "message": f"Error - {e}"
         }
-
-    payload["metadata"]["execution_arn"] = response["executionArn"]
-    payload["metadata"]["start_date"] = (
-        response["startDate"].strftime("%d-%b-%Y (%H:%M:%S.%f)")
-    )
 
     return payload
