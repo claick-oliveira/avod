@@ -5,15 +5,17 @@ Description: >
 
   Template for A.V.O.D
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 5
 
 Parameters:
-  SF_ARN:
+  SFARN:
     Type: String
     Default: arn:aws:states:us-east-1:123456789012:stateMachine:AVOD
+  MCROLE:
+    Type: String
+    Default: arn:aws:iam::012345678901:role/DummyRole
   Region:
     Type: String
     Default: us-east-1
@@ -23,24 +25,72 @@ Parameters:
 
 Resources:
   StartWorkflowFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: source/start_workflow
       Handler: app.lambda_handler
       Runtime: python3.7
       Environment:
         Variables:
-          SF_ARN: !Ref SF_ARN
+          SFARN: !Ref SFARN
           REGION: !Ref Region
           AWSENV: !Ref AWSEnv
+  StartExtractAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_extract_audio
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          MCROLE: !Ref MCROLE
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertCreateJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:CreateJob
+            - mediaconvert:DescribeEndpoints
+            Resource: '*'
+          - Sid: IamPassRolePolicy
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref MCROLE
+  GetExtractAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/get_extract_audio
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertGetJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:GetJob
+            Resource: '*'
 
 Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   StartWorkflowFunction:
     Description: "Start Workflow Lambda Function ARN"
     Value: !GetAtt StartWorkflowFunction.Arn
   StartWorkflowFunctionFunctionIamRole:
     Description: "Implicit IAM Role created for Start Workflow function"
     Value: !GetAtt StartWorkflowFunctionRole.Arn
+  StartExtractAudioFunction:
+    Description: "Start Extract Audio Lambda Function ARN"
+    Value: !GetAtt StartExtractAudioFunction.Arn
+  StartExtractAudioFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Extract Audio function"
+    Value: !GetAtt StartExtractAudioFunctionRole.Arn
+  GetExtractAudioFunction:
+    Description: "Get Extract Audio Lambda Function ARN"
+    Value: !GetAtt GetExtractAudioFunction.Arn
+  GetExtractAudioFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Extract Audio function"
+    Value: !GetAtt GetExtractAudioFunctionRole.Arn
