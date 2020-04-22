@@ -26,10 +26,10 @@ def lambda_handler(event, context):
 
     try:
         if (
-            "job_id" in event["Output"]["Audio"] and
+            "job_id" in event["Outputs"]["Audio"] and
             "mediaconvert_endpoint" in event["metadata"]
         ):
-            job_id = event["Output"]["Audio"]["job_id"]
+            job_id = event["Outputs"]["Audio"]["job_id"]
             mediaconvert_endpoint = event["metadata"]["mediaconvert_endpoint"]
             mediaconvert = boto3.client(
                 "mediaconvert",
@@ -74,8 +74,8 @@ def lambda_handler(event, context):
 
             key = folder + "/" + file_name + modifier + "." + extension
 
-            payload["Output"]["Audio"]["bucket"] = bucket
-            payload["Output"]["Audio"]["key"] = key
+            payload["Outputs"]["Audio"]["bucket"] = bucket
+            payload["Outputs"]["Audio"]["key"] = key
 
             payload["metadata"]["status"] = "COMPLETE"
             payload["metadata"]["last_update"] = (

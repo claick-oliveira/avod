@@ -41,7 +41,7 @@ def lambda_handler(event, context):
 
     payload = event
     payload["metadata"]["status"] = "IN PROGRESS"
-    payload["Output"] = {}
+    payload["Outputs"] = {}
 
     file_input = f"s3://{bucket}/{key}"
     destination = f"s3://{bucket}/outputs/{_id}/"
@@ -137,7 +137,7 @@ def lambda_handler(event, context):
         }
     else:
         job_id = response['Job']['Id']
-        payload["Output"]["Audio"] = {
+        payload["Outputs"]["Audio"] = {
             "job_id": job_id
         }
 
