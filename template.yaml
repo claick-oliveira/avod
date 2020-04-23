@@ -16,14 +16,32 @@ Parameters:
   MCROLE:
     Type: String
     Default: arn:aws:iam::012345678901:role/DummyRole
+  TCROLE:
+    Type: String
+    Default: arn:aws:iam::012345678901:role/DummyRole
+  LANGCODE:
+    Type: String
+    Default: pt-BR
+  MEDIATYPE:
+    Type: String
+    Default: mp4
   Region:
     Type: String
     Default: us-east-1
   AWSEnv:
     Type: String
     Default: AWS
+  s3bucket:
+    Type: String
+    Default: avod
 
 Resources:
+  OrganizeStepFunctionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/organize_stepfunctions
+      Handler: app.lambda_handler
+      Runtime: python3.7
   StartWorkflowFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -74,8 +92,61 @@ Resources:
             Action:
             - mediaconvert:GetJob
             Resource: '*'
+  StartTranscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_transcribe
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+          TCROLE: !Ref TCROLE
+          LANGCODE: !Ref LANGCODE
+          MEDIATYPE: !Ref MEDIATYPE
+      Policies:
+        - Statement:
+          - Sid: StartTranscribeJobPolicy
+            Effect: Allow
+            Action:
+            - transcribe:StartTranscriptionJob
+            Resource: '*'
+          - Sid: IamPassRolePolicy
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref TCROLE
+  GetTranscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/get_transcribe
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: GetTranscribeJobPolicy
+            Effect: Allow
+            Action:
+            - transcribe:GetTranscriptionJob
+            Resource: '*'
+          - Sid: GetTranscribeS3Policy
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            Resource: !Sub
+                - arn:aws:s3:::${s3bucket}/*
+                - { s3bucket: !Ref s3bucket }
 
 Outputs:
+  OrganizeStepFunctionsFunction:
+    Description: "Organize Step Functions Lambda Function ARN"
+    Value: !GetAtt OrganizeStepFunctionsFunction.Arn
+  OrganizeStepFunctionsFunctionIamRole:
+    Description: "Implicit IAM Role created for Organize Step Functions function"
+    Value: !GetAtt OrganizeStepFunctionsFunctionRole.Arn
   StartWorkflowFunction:
     Description: "Start Workflow Lambda Function ARN"
     Value: !GetAtt StartWorkflowFunction.Arn
@@ -94,3 +165,15 @@ Outputs:
   GetExtractAudioFunctionIamRole:
     Description: "Implicit IAM Role created for Get Extract Audio function"
     Value: !GetAtt GetExtractAudioFunctionRole.Arn
+  StartTranscribeFunction:
+    Description: "Start Transcribe Lambda Function ARN"
+    Value: !GetAtt StartTranscribeFunction.Arn
+  StartTranscribeFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Transcribe function"
+    Value: !GetAtt StartTranscribeFunctionRole.Arn
+  GetTranscribeFunction:
+    Description: "Get Transcribe Lambda Function ARN"
+    Value: !GetAtt GetTranscribeFunction.Arn
+  GetTranscribeFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Transcribe function"
+    Value: !GetAtt GetTranscribeFunctionRole.Arn
