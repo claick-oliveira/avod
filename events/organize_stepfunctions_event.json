@@ -1,0 +1,21 @@
+[
+  {
+    "metadata": {
+      "status": "COMPLETED",
+      "uuid": "531f729c-2f96-4ba7-8cf7-02284f3e7e35",
+      "event_time": "1970-01-01T00:00:00.000Z",
+      "bucket": "example-bucket",
+      "key": "input/key.mp4",
+      "file_name": "key.mp4",
+      "mediaconvert_endpoint": "https://abcd12345.mediaconvert.us-east-1.amazonaws.com",
+      "last_update": "14-Apr-2020 (18:04:15.230699)"
+    },
+    "Outputs": {
+      "Audio": {
+        "job_id": "1234567890123-a1bcd2",
+        "bucket": "example-bucket",
+        "key": "outputs/531f729c-2f96-4ba7-8cf7-02284f3e7e35/key_audio.mp4"
+      }
+    }
+  }
+]
