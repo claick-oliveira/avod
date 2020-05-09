@@ -7,7 +7,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 300
 
 Parameters:
   SFARN:
@@ -20,6 +20,12 @@ Parameters:
     Type: String
     Default: arn:aws:iam::012345678901:role/DummyRole
   LANGCODE:
+    Type: String
+    Default: pt-BR
+  SOURCELANGCODE:
+    Type: String
+    Default: pt-BR
+  TARGETLANGCODE:
     Type: String
     Default: pt-BR
   MEDIATYPE:
@@ -139,6 +145,46 @@ Resources:
             Resource: !Sub
                 - arn:aws:s3:::${s3bucket}/*
                 - { s3bucket: !Ref s3bucket }
+  StartWebCaptionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_webcaptions
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+          SOURCELANGCODE: !Ref SOURCELANGCODE
+      Policies:
+        - Statement:
+          - Sid: GetTranscribeS3Policy
+            Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            Resource: !Sub
+                - arn:aws:s3:::${s3bucket}/*
+                - { s3bucket: !Ref s3bucket }
+  StartSRTFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_srt
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+          SOURCELANGCODE: !Ref TARGETLANGCODE
+      Policies:
+        - Statement:
+          - Sid: GetTranscribeS3Policy
+            Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            Resource: !Sub
+                - arn:aws:s3:::${s3bucket}/*
+                - { s3bucket: !Ref s3bucket }
 
 Outputs:
   OrganizeStepFunctionsFunction:
@@ -177,3 +223,15 @@ Outputs:
   GetTranscribeFunctionIamRole:
     Description: "Implicit IAM Role created for Get Transcribe function"
     Value: !GetAtt GetTranscribeFunctionRole.Arn
+  StartWebCaptionsFunction:
+    Description: "Start Web Captions Lambda Function ARN"
+    Value: !GetAtt StartWebCaptionsFunction.Arn
+  StartWebCaptionsFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Web Captions function"
+    Value: !GetAtt StartWebCaptionsFunctionRole.Arn
+  StartSRTFunction:
+    Description: "Start SRT Lambda Function ARN"
+    Value: !GetAtt StartSRTFunction.Arn
+  StartSRTFunctionIamRole:
+    Description: "Implicit IAM Role created for Start SRT function"
+    Value: !GetAtt StartSRTFunctionRole.Arn
