@@ -38,7 +38,6 @@ def lambda_handler(event, context):
         }
 
     payload = event
-    payload["Outputs"]["WebVTT"] = {}
 
     try:
         transcribe_file = s3.get_object(Bucket=bucket, Key=key)
