@@ -700,7 +700,7 @@ def lambda_handler(event, context):
         payload["Outputs"]["HLS"] = {
             "job_id": job_id,
             "bucket": bucket,
-            "key": f"{destination}{hls_name}"
+            "key": f"outputs/{_id}/HLS/{hls_name}"
         }
 
     return payload
