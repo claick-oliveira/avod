@@ -96,7 +96,7 @@ def lambda_handler(event, context):
             payload["Outputs"]["Transcribe"] = {
                 "job_id": job_id,
                 "bucket": bucket,
-                "key": f"{destination_key}/Transcript.json"
+                "key": f"{destination_key}"
             }
             return payload
         else:
