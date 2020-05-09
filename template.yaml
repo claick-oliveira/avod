@@ -185,6 +185,45 @@ Resources:
             Resource: !Sub
                 - arn:aws:s3:::${s3bucket}/*
                 - { s3bucket: !Ref s3bucket }
+  StartHLSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_hls
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          MCROLE: !Ref MCROLE
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertCreateJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:CreateJob
+            - mediaconvert:DescribeEndpoints
+            Resource: '*'
+          - Sid: IamPassRolePolicy
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref MCROLE
+  GetHLSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/get_hls
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertGetJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:GetJob
+            Resource: '*'
 
 Outputs:
   OrganizeStepFunctionsFunction:
@@ -235,3 +274,15 @@ Outputs:
   StartSRTFunctionIamRole:
     Description: "Implicit IAM Role created for Start SRT function"
     Value: !GetAtt StartSRTFunctionRole.Arn
+  StartHLSFunction:
+    Description: "Start HLS Lambda Function ARN"
+    Value: !GetAtt StartHLSFunction.Arn
+  StartHLSFunctionIamRole:
+    Description: "Implicit IAM Role created for Start HLS function"
+    Value: !GetAtt StartHLSFunctionRole.Arn
+  GetHLSFunction:
+    Description: "Get HLS Lambda Function ARN"
+    Value: !GetAtt GetHLSFunction.Arn
+  GetHLSFunctionIamRole:
+    Description: "Implicit IAM Role created for Get HLS function"
+    Value: !GetAtt GetHLSFunctionRole.Arn
