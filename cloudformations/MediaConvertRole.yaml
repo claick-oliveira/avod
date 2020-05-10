@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  A.V.O.D
+
+  Template for MediaConvert Role
+
+Parameters:
+  Bucket:
+    Type: String
+    Default: avod
+
+Resources:
+  MediaConvertRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "mediaconvert.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "MediaConvertPolicyS3"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub
+                  - arn:aws:s3:::${bucket}/*
+                  - { bucket: !Ref Bucket }
+
+Outputs:
+  MediaConvertRole:
+    Description: "IAM Role created for Media Convert"
+    Value: !Ref MediaConvertRole
+  MediaConvertRoleArn:
+    Description: "Media Convert IAM Role ARN"
+    Value: !GetAtt MediaConvertRole.Arn
+  MediaConvertRoleId:
+    Description: "Media Convert IAM Role ID"
+    Value: !GetAtt MediaConvertRole.RoleId

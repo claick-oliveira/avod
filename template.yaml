@@ -1,0 +1,288 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  A.V.O.D
+
+  Template for A.V.O.D
+
+Globals:
+  Function:
+    Timeout: 300
+
+Parameters:
+  SFARN:
+    Type: String
+    Default: arn:aws:states:us-east-1:123456789012:stateMachine:AVOD
+  MCROLE:
+    Type: String
+    Default: arn:aws:iam::012345678901:role/DummyRole
+  TCROLE:
+    Type: String
+    Default: arn:aws:iam::012345678901:role/DummyRole
+  LANGCODE:
+    Type: String
+    Default: pt-BR
+  SOURCELANGCODE:
+    Type: String
+    Default: pt-BR
+  TARGETLANGCODE:
+    Type: String
+    Default: pt-BR
+  MEDIATYPE:
+    Type: String
+    Default: mp4
+  Region:
+    Type: String
+    Default: us-east-1
+  AWSEnv:
+    Type: String
+    Default: AWS
+  s3bucket:
+    Type: String
+    Default: avod
+
+Resources:
+  OrganizeStepFunctionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/organize_stepfunctions
+      Handler: app.lambda_handler
+      Runtime: python3.7
+  StartWorkflowFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_workflow
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          SFARN: !Ref SFARN
+          REGION: !Ref Region
+          AWSENV: !Ref AWSEnv
+  StartExtractAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_extract_audio
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          MCROLE: !Ref MCROLE
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertCreateJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:CreateJob
+            - mediaconvert:DescribeEndpoints
+            Resource: '*'
+          - Sid: IamPassRolePolicy
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref MCROLE
+  GetExtractAudioFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/get_extract_audio
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertGetJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:GetJob
+            Resource: '*'
+  StartTranscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_transcribe
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+          TCROLE: !Ref TCROLE
+          LANGCODE: !Ref LANGCODE
+          MEDIATYPE: !Ref MEDIATYPE
+      Policies:
+        - Statement:
+          - Sid: StartTranscribeJobPolicy
+            Effect: Allow
+            Action:
+            - transcribe:StartTranscriptionJob
+            Resource: '*'
+          - Sid: IamPassRolePolicy
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref TCROLE
+  GetTranscribeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/get_transcribe
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: GetTranscribeJobPolicy
+            Effect: Allow
+            Action:
+            - transcribe:GetTranscriptionJob
+            Resource: '*'
+          - Sid: GetTranscribeS3Policy
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            Resource: !Sub
+                - arn:aws:s3:::${s3bucket}/*
+                - { s3bucket: !Ref s3bucket }
+  StartWebCaptionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_webcaptions
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+          SOURCELANGCODE: !Ref SOURCELANGCODE
+      Policies:
+        - Statement:
+          - Sid: GetTranscribeS3Policy
+            Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            Resource: !Sub
+                - arn:aws:s3:::${s3bucket}/*
+                - { s3bucket: !Ref s3bucket }
+  StartSRTFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_srt
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+          SOURCELANGCODE: !Ref TARGETLANGCODE
+      Policies:
+        - Statement:
+          - Sid: GetTranscribeS3Policy
+            Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            Resource: !Sub
+                - arn:aws:s3:::${s3bucket}/*
+                - { s3bucket: !Ref s3bucket }
+  StartHLSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/start_hls
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          MCROLE: !Ref MCROLE
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertCreateJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:CreateJob
+            - mediaconvert:DescribeEndpoints
+            Resource: '*'
+          - Sid: IamPassRolePolicy
+            Effect: Allow
+            Action:
+            - iam:PassRole
+            Resource: !Ref MCROLE
+  GetHLSFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: source/get_hls
+      Handler: app.lambda_handler
+      Runtime: python3.7
+      Environment:
+        Variables:
+          REGION: !Ref Region
+      Policies:
+        - Statement:
+          - Sid: MediaConvertGetJobPolicy
+            Effect: Allow
+            Action:
+            - mediaconvert:GetJob
+            Resource: '*'
+
+Outputs:
+  OrganizeStepFunctionsFunction:
+    Description: "Organize Step Functions Lambda Function ARN"
+    Value: !GetAtt OrganizeStepFunctionsFunction.Arn
+  OrganizeStepFunctionsFunctionIamRole:
+    Description: "Implicit IAM Role created for Organize Step Functions function"
+    Value: !GetAtt OrganizeStepFunctionsFunctionRole.Arn
+  StartWorkflowFunction:
+    Description: "Start Workflow Lambda Function ARN"
+    Value: !GetAtt StartWorkflowFunction.Arn
+  StartWorkflowFunctionFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Workflow function"
+    Value: !GetAtt StartWorkflowFunctionRole.Arn
+  StartExtractAudioFunction:
+    Description: "Start Extract Audio Lambda Function ARN"
+    Value: !GetAtt StartExtractAudioFunction.Arn
+  StartExtractAudioFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Extract Audio function"
+    Value: !GetAtt StartExtractAudioFunctionRole.Arn
+  GetExtractAudioFunction:
+    Description: "Get Extract Audio Lambda Function ARN"
+    Value: !GetAtt GetExtractAudioFunction.Arn
+  GetExtractAudioFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Extract Audio function"
+    Value: !GetAtt GetExtractAudioFunctionRole.Arn
+  StartTranscribeFunction:
+    Description: "Start Transcribe Lambda Function ARN"
+    Value: !GetAtt StartTranscribeFunction.Arn
+  StartTranscribeFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Transcribe function"
+    Value: !GetAtt StartTranscribeFunctionRole.Arn
+  GetTranscribeFunction:
+    Description: "Get Transcribe Lambda Function ARN"
+    Value: !GetAtt GetTranscribeFunction.Arn
+  GetTranscribeFunctionIamRole:
+    Description: "Implicit IAM Role created for Get Transcribe function"
+    Value: !GetAtt GetTranscribeFunctionRole.Arn
+  StartWebCaptionsFunction:
+    Description: "Start Web Captions Lambda Function ARN"
+    Value: !GetAtt StartWebCaptionsFunction.Arn
+  StartWebCaptionsFunctionIamRole:
+    Description: "Implicit IAM Role created for Start Web Captions function"
+    Value: !GetAtt StartWebCaptionsFunctionRole.Arn
+  StartSRTFunction:
+    Description: "Start SRT Lambda Function ARN"
+    Value: !GetAtt StartSRTFunction.Arn
+  StartSRTFunctionIamRole:
+    Description: "Implicit IAM Role created for Start SRT function"
+    Value: !GetAtt StartSRTFunctionRole.Arn
+  StartHLSFunction:
+    Description: "Start HLS Lambda Function ARN"
+    Value: !GetAtt StartHLSFunction.Arn
+  StartHLSFunctionIamRole:
+    Description: "Implicit IAM Role created for Start HLS function"
+    Value: !GetAtt StartHLSFunctionRole.Arn
+  GetHLSFunction:
+    Description: "Get HLS Lambda Function ARN"
+    Value: !GetAtt GetHLSFunction.Arn
+  GetHLSFunctionIamRole:
+    Description: "Implicit IAM Role created for Get HLS function"
+    Value: !GetAtt GetHLSFunctionRole.Arn

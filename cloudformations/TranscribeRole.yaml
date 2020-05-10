@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  A.V.O.D
+
+  Template for Transcribe Role
+
+Parameters:
+  Bucket:
+    Type: String
+    Default: avod
+
+Resources:
+  TranscribeRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "transcribe.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "TranscribePolicyS3"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: !Sub
+                  - arn:aws:s3:::${bucket}/*
+                  - { bucket: !Ref Bucket }
+
+Outputs:
+  TranscribeRole:
+    Description: "IAM Role created for Transcribe"
+    Value: !Ref TranscribeRole
+  TranscribeRoleArn:
+    Description: "Transcribe IAM Role ARN"
+    Value: !GetAtt TranscribeRole.Arn
+  TranscribeRoleId:
+    Description: "Transcribe IAM Role ID"
+    Value: !GetAtt TranscribeRole.RoleId

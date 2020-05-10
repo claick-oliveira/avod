@@ -1,0 +1,364 @@
+{
+  "StartAt": "extractAudio",
+  "States": {
+    "extractAudio": {
+      "Type": "Parallel",
+      "Next": "StepFunctions Helper Extract Audio",
+      "Branches": [
+        {
+          "StartAt": "Execute Extract Audio",
+          "States": {
+            "Execute Extract Audio": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-StartExtractAudioFunction",
+              "Next": "Extract Audio Wait",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Extract Audio Failed"
+                }
+              ]
+            },
+            "Get Status Extract Audio": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-GetExtractAudioFunction",
+              "Next": "Did Extract Audio Complete?",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Extract Audio Failed"
+                }
+              ]
+            },
+            "Did Extract Audio Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "COMPLETE",
+                  "Next": "Extract Audio Succeeded"
+                },
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "IN PROGRESS",
+                  "Next": "Extract Audio Wait"
+                }
+              ],
+              "Default": "Extract Audio Failed"
+            },
+            "Extract Audio Wait": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "Get Status Extract Audio"
+            },
+            "Extract Audio Failed": {
+              "Type": "Fail"
+            },
+            "Extract Audio Succeeded": {
+              "Type": "Succeed"
+            }
+          }
+        }
+      ]
+    },
+    "transcribe": {
+      "Type": "Parallel",
+      "Next": "StepFunctions Helper Transcribe",
+      "Branches": [
+        {
+          "StartAt": "Execute Transcribe",
+          "States": {
+            "Execute Transcribe": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-StartTranscribeFunction",
+              "Next": "Transcribe Wait",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Transcribe Failed"
+                }
+              ]
+            },
+            "Get Status Transcribe": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-GetTranscribeFunction",
+              "Next": "Did Transcribe Complete?",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Transcribe Failed"
+                }
+              ]
+            },
+            "Did Transcribe Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "COMPLETE",
+                  "Next": "Transcribe Succeeded"
+                },
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "IN PROGRESS",
+                  "Next": "Transcribe Wait"
+                }
+              ],
+              "Default": "Transcribe Failed"
+            },
+            "Transcribe Wait": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "Get Status Transcribe"
+            },
+            "Transcribe Failed": {
+              "Type": "Fail"
+            },
+            "Transcribe Succeeded": {
+              "Type": "Succeed"
+            }
+          }
+        }
+      ]
+    },
+    "captions": {
+      "Type": "Parallel",
+      "Next": "StepFunctions Helper Captions",
+      "Branches": [
+        {
+          "StartAt": "Execute WebCaptions",
+          "States": {
+            "Execute WebCaptions": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-StartWebCaptionsFunction",
+              "Next": "Execute SRT",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Captions Failed"
+                }
+              ]
+            },
+            "Execute SRT": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-StartSRTFunction",
+              "Next": "Captions Succeeded",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "Captions Failed"
+                }
+              ]
+            },
+            "Captions Failed": {
+              "Type": "Fail"
+            },
+            "Captions Succeeded": {
+              "Type": "Succeed"
+            }
+          }
+        }
+      ]
+    },
+    "hls": {
+      "Type": "Parallel",
+      "Next": "StepFunctions Helper HLS",
+      "Branches": [
+        {
+          "StartAt": "Execute HLS",
+          "States": {
+            "Execute HLS": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-StartHLSFunction",
+              "Next": "HLS Wait",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "HLS Failed"
+                }
+              ]
+            },
+            "Get Status HLS": {
+              "Type": "Task",
+              "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-GetHLSFunction",
+              "Next": "Did HLS Complete?",
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.Unknown"
+                  ],
+                  "IntervalSeconds": 2,
+                  "MaxAttempts": 2,
+                  "BackoffRate": 2
+                }
+              ],
+              "Catch": [
+                {
+                  "ErrorEquals": [
+                    "States.ALL"
+                  ],
+                  "Next": "HLS Failed"
+                }
+              ]
+            },
+            "Did HLS Complete?": {
+              "Type": "Choice",
+              "Choices": [
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "COMPLETED",
+                  "Next": "HLS Succeeded"
+                },
+                {
+                  "Variable": "$.metadata.status",
+                  "StringEquals": "IN PROGRESS",
+                  "Next": "HLS Wait"
+                }
+              ],
+              "Default": "HLS Failed"
+            },
+            "HLS Wait": {
+              "Type": "Wait",
+              "Seconds": 10,
+              "Next": "Get Status HLS"
+            },
+            "HLS Failed": {
+              "Type": "Fail"
+            },
+            "HLS Succeeded": {
+              "Type": "Succeed"
+            }
+          }
+        }
+      ]
+    },
+    "StepFunctions Helper Extract Audio": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-OrganizeStepFunctionsFunction",
+      "Next": "transcribe"
+    },
+    "StepFunctions Helper Transcribe": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-OrganizeStepFunctionsFunction",
+      "Next": "captions"
+    },
+    "StepFunctions Helper Captions": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-OrganizeStepFunctionsFunction",
+      "Next": "hls"
+    },
+    "StepFunctions Helper HLS": {
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-east-1:012345678910:function:avod-OrganizeStepFunctionsFunction",
+      "End": true
+    }
+  }
+}

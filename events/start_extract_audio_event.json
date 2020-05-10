@@ -1,0 +1,10 @@
+{
+  "metadata":{
+    "status": "OK",
+    "uuid": "531f729c-2f96-4ba7-8cf7-02284f3e7e35",
+    "event_time": "1970-01-01T00:00:00.000Z",
+    "bucket": "example-bucket",
+    "key": "input/key.mp4",
+    "file_name": "key.mp4"
+  }
+}
