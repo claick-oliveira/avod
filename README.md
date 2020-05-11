@@ -71,7 +71,7 @@ aws cloudformation deploy --template-file cloudformations/MediaConvertRole.yaml 
 Transcribe:
 
 ```bash
-aws cloudformation deploy --template-file cloudformations/MediaConvertRole.yaml --stack-name <stack-name> --capabilities CAPABILITY_IAM --parameter-overrides Bucket=<bucket-name>
+aws cloudformation deploy --template-file cloudformations/TranscribeRole.yaml --stack-name <stack-name> --capabilities CAPABILITY_IAM --parameter-overrides Bucket=<bucket-name>
 ```
 
 Remenber to replace:
