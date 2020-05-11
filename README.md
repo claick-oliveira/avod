@@ -42,11 +42,12 @@ make dkn
 
 ## Running the unit tests
 
-#TODO:
+TODO
 
 ## Deploy/Test the application
 
 To deploy this solution you need to execute three steps.
+
 - Create a S3 Bucket;
 - Create Media Convert and Transcribe roles;
 - Create Lambdas functions;
@@ -55,34 +56,39 @@ To deploy this solution you need to execute three steps.
 
 ### S3
 
-#TODO:
+TODO
 
 ### Media Convert and Transcribe
 
 To create these resources use the cloudformation templates in the folder `cloudformations`. You can execute these commands to deploy:
 
 Media Convert:
+
 ```bash
 aws cloudformation deploy --template-file cloudformations/MediaConvertRole.yaml --stack-name <stack-name> --capabilities CAPABILITY_IAM --parameter-overrides Bucket=<bucket-name>
 ```
 
 Transcribe:
+
 ```bash
-aws cloudformation deploy --template-file cloudformations/MediaConvertRole.yaml --stack-name <stack-name> --capabilities CAPABILITY_IAM --parameter-overrides Bucket=<bucket-name>
+aws cloudformation deploy --template-file cloudformations/TranscribeRole.yaml --stack-name <stack-name> --capabilities CAPABILITY_IAM --parameter-overrides Bucket=<bucket-name>
 ```
 
 Remenber to replace:
+
 - \<stack-name\>
 - \<bucket-name\>
 
 After the deploy you need to get the Roles [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html). It's look like as `arn:partition:service:region:account-id:resource-type/resource-id`. Get the value to each stack (Media Convert and Transcribe), becaue we use in the next step.
 
 Media Convert:
+
 ```bash
 aws cloudformation describe-stacks --stack-name <stack-name> --query 'Stacks[*].Outputs[?OutputKey==`MediaConvertRoleArn`].OutputValue' --output text
 ```
 
 Transcribe:
+
 ```bash
 aws cloudformation describe-stacks --stack-name <stack-name> --query 'Stacks[*].Outputs[?OutputKey==`TranscribeRoleArn`].OutputValue' --output text
 ```
@@ -92,6 +98,7 @@ aws cloudformation describe-stacks --stack-name <stack-name> --query 'Stacks[*].
 The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
 
 Lmabdas:
+
 - **StartExtractAudioFunction**
 - **GetExtractAudioFunction**
 - **StartTranscribeFunction**
@@ -142,16 +149,17 @@ aws cloudformation deploy --template-file cloudformations/StepFunctions.yaml --s
 ```
 
 Remenber to replace:
+
 - \<stack-name\>
 - \<lambda-arn\>, use the ARN that you got on the previous step.
 
 ## S3 Trigger
 
-#TODO:
+TODO
 
 ## Use the SAM CLI to build and test locally
 
-#TODO:
+TODO
 
 ## Add a resource to your application
 
